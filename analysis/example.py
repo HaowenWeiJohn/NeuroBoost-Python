@@ -58,6 +58,8 @@ def plot_butterfly_topomap_with_gfp(epochs, plot_range_ms=(-10, 200), times_ms=N
 # Usage example
 # -------------------------------------------------------------------------
 # Define paths and load the dataset
+
+
 output_path = "../data/"
 output_filename = "sub-01_ses-eegT1_final.set"
 epochs = mne.read_epochs_eeglab(os.path.join(output_path, output_filename))
@@ -70,3 +72,5 @@ plot_butterfly_topomap_with_gfp(
     plot_title="Evoked Response with Topomaps at 15, 30, 60, 100 ms",
     fig_dpi=500
 )
+
+
