@@ -99,6 +99,7 @@ for n_epochs in epoch_counts:
     # Save the figure with a descriptive filename
     save_path = os.path.join(output_path, f"evoked_{n_epochs}epochs.png")
     fig.savefig(save_path, dpi=500)
+    plt.show()
     plt.close(fig)  # Close the figure to free memory
 
     print(f"Finished plotting for {n_epochs} epochs. Saved at: {save_path}")
