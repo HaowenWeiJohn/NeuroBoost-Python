@@ -22,7 +22,7 @@ PARTICIPANT_ID = os.getenv('PARTICIPANT_ID')
 assert TMS_EEG_ROOT_DIR is not None, "TMS_EEG_ROOT_DIR is not set in the environment variables."
 assert os.path.exists(TMS_EEG_ROOT_DIR), f"TMS_EEG_ROOT_DIR {TMS_EEG_ROOT_DIR} does not exist."
 
-digitalization_file_path = Path(TMS_EEG_ROOT_DIR)   / EXPERIMENT_NAME / PARTICIPANT_ID / 'digitization'
+digitalization_file_path = Path(TMS_EEG_ROOT_DIR)   / EXPERIMENT_NAME / PARTICIPANT_ID / 'digitization.csv'
 
 assert digitalization_file_path.exists(), f"Digitalization file {digitalization_file_path} does not exist."
 
@@ -56,19 +56,5 @@ plotter.view_vector((0, 0, 1), viewup=(0, 1, 0))
 
 # Blocking call to keep window open
 plotter.show()
-
-
-
-# montage = mne.channels.make_dig_montage(ch_pos=ch_pos,
-#                                         coord_frame='head')  # 'head' is typical for Polhemus/Xensor
-#
-# # Visualize in 2D
-# montage.plot(kind = "topomap", show_names=True)
-#
-#
-# fig = montage.plot(kind="3d", show=False)  # 3D
-# fig = fig.gca().view_init(azim=-90, elev=0)  # set view angle for tutorial
-# plt.show()
-
 
 

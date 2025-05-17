@@ -32,43 +32,6 @@ session_path = Path(TMS_EEG_ROOT_DIR) / EXPERIMENT_NAME / PARTICIPANT_ID / sessi
 
 assert session_path.exists(), f"Session file {session_path} does not exist."
 
-raw = mne.io.read_raw_brainvision(session_path, preload=True)
-
-# Print the sampling frequency in Hz
-print("Sampling frequency (Hz):", raw.info['sfreq'])
-
-# Print the list of channel names as specified in the header
-print("Channel names:", raw.info['ch_names'])
 
 
-# create montage from the digitization file
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+montage = mne.channels.read_custom_montage(digitalization_file_path)

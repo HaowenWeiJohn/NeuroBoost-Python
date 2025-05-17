@@ -83,7 +83,11 @@ def visualize_digitalization_file_2d(filepath, distance_scaler = 0.001, show_nam
 
     montage.plot(kind="topomap", show_names=show_names)
 
+def create_montage_from_digitization_file():
 
+
+
+    pass
 
 
 

@@ -12,7 +12,7 @@ EXPERIMENT_NAME = os.getenv('EXPERIMENT_NAME')
 PARTICIPANT_ID = os.getenv('PARTICIPANT_ID')
 
 
-digitalization_file_path = Path(TMS_EEG_ROOT_DIR)   / EXPERIMENT_NAME / PARTICIPANT_ID / 'digitization'
+digitalization_file_path = Path(TMS_EEG_ROOT_DIR)   / EXPERIMENT_NAME / PARTICIPANT_ID / 'digitization.csv'
 
 assert digitalization_file_path.exists(), f"Digitalization file {digitalization_file_path} does not exist."
 
