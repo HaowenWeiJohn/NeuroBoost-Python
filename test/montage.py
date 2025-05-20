@@ -3,7 +3,6 @@ import mne
 
 mne.viz.set_3d_backend('pyvistaqt')  # IMPORTANT!
 
-
 available_montages = mne.channels.get_builtin_montages()
 print(available_montages)
 

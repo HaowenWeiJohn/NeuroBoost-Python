@@ -41,21 +41,5 @@ print("Channel names:", raw.info['ch_names'])
 
 
 
-# print all EEG channels
-
-
-# # Print the total number of channels
-# print("Number of channels:", raw.info['nchan'])
-#
-# events, event_id = mne.events_from_annotations(raw)
-#
-#
-# epochs = mne.Epochs(raw, events, event_id=stimulus_event_id,
-#                     tmin=-1.0, tmax=1.0,  # 1 second before and after the event
-#                     baseline=None, preload=True)
-#
-# print("Number of epochs:", len(epochs))
-
-
 
 

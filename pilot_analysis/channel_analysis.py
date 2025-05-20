@@ -4,12 +4,30 @@ import mne
 from pathlib import Path
 from dotenv import load_dotenv
 import os
-from utils import visualize_digitalization_file_3d, visualize_digitalization_file_2d
 
+from mne import channel_type
+
+from utils import visualize_digitalization_file_3d, visualize_digitalization_file_2d, \
+    create_montage_from_digitization_file, visualize_epochs_channels
 
 load_dotenv()  # Loads from default .env file
 
+channel_names = [ 'EEG 001', 'EEG 002', 'EEG 003', 'EEG 004', 'EEG 005', 'EEG 006', 'EEG 007', 'EEG 008',
+                'EEG 009', 'EEG 010', 'EEG 011', 'EEG 012', 'EEG 013', 'EEG 014', 'EEG 015', 'EEG 016',
+                'EEG 017', 'EEG 018', 'EEG 019', 'EEG 020', 'EEG 021', 'EEG 022', 'EEG 023', 'EEG 024',
+                'EEG 025', 'EEG 026', 'EEG 027', 'EEG 028', 'EEG 029', 'EEG 030', 'EEG 031', 'EEG 032',
+                'EMG 001',
+                'EEG 033', 'EEG 034', 'EEG 035', 'EEG 036', 'EEG 037', 'EEG 038', 'EEG 039', 'EEG 040',
+                'EEG 041', 'EEG 042', 'EEG 043', 'EEG 044', 'EEG 045', 'EEG 046', 'EEG 047', 'EEG 048',
+                'EEG 049', 'EEG 050', 'EEG 051', 'EEG 052', 'EEG 053', 'EEG 054', 'EEG 055', 'EEG 056',
+                'EEG 057', 'EEG 058', 'EEG 059', 'EEG 060', 'EEG 061', 'EEG 062', 'EEG 063', 'EEG 064',
+                ]
+# 32 eeg, 1 emg, 32 eeg, list
+channel_types = ['eeg'] * 32 + ['emg'] + ['eeg'] * 32
+
 stimulus_event_id = {'Stimulus/A': 10001}
+
+baseline = (-0.2, 0)  # Baseline period (200 ms before the event)
 
 TMS_EEG_ROOT_DIR = os.getenv('TMS_EEG_ROOT_DIR')
 EXPERIMENT_NAME = os.getenv('EXPERIMENT_NAME')
@@ -40,35 +58,55 @@ print("Sampling frequency (Hz):", raw.info['sfreq'])
 # Print the list of channel names as specified in the header
 print("Channel names:", raw.info['ch_names'])
 
+montage = create_montage_from_digitization_file(digitalization_file_path, channel_names= channel_names[0:32] + channel_names[33:65])
 
-# create montage from the digitization file
+print("Montage channel names:", montage.ch_names)
 
+old_channel_names = raw.ch_names
 
+mapping = {old_channel_names[i]: channel_names[i] for i in range(len(old_channel_names))}
 
+raw.rename_channels(mapping)
 
+# set channel types
+raw.set_channel_types({name: ctype for name, ctype in zip(channel_names, channel_types)})
 
-
-
-
-
-
-
-
-
-
-
-
+# set montage
+eeg_channel_names = [name for name, ctype in zip(channel_names, channel_types) if ctype == 'eeg']
+raw.pick(eeg_channel_names).set_montage(montage)
 
 
 
+# create events
+events, event_id = mne.events_from_annotations(raw)
+
+
+# create epochs
+epochs = mne.Epochs(raw, events, event_id=stimulus_event_id,
+                    tmin=-1, tmax=1,  # 1 second before and after the event
+                    baseline=(-0.2, -0.02),  # baseline correction from -200 ms to 0 ms
+                    preload=True
+                    )
+
+evoked = epochs.average()
+
+# visualize epochs
+evoked.plot(ylim=dict(eeg=[-300, 300]))
+
+browser = epochs.plot(
+    n_epochs   = 3,      # whatever you like
+    n_channels = 5,
+    scalings   = 'auto',
+    block      = True     # blocks script until you close the window
+)
+
+# print("Number of epochs:", len(epochs))
 
 
 
-
-
-
-
-
-
-
-
+# browser = raw.plot(
+#     n_channels = len(raw.ch_names),  # show every channel
+#     duration   = 20,                 # seconds visible in one screenful
+#     scalings   = 'auto',             # per‑channel autoscaling
+#     block      = True                # pause script until window closes
+# )
