@@ -1,0 +1,92 @@
+%% ---------------------------------------------------------------
+clear; close all; clc;
+
+%% 0. Choose where to look for the .env file  ---------------------
+%    • Pass an explicit path, e.g.  '../.env'
+%    • Leave empty ("") to fall back to current folder
+ENV_PATH = fullfile('..', '.env');   % ← parametric
+
+env = loadenv(ENV_PATH);             % loads only if file exists
+
+%% 1. Read the variables (will be empty strings if .env missing)
+ROOT_DIR        = getenv('TMS_EEG_ROOT_DIR');
+EXPERIMENT_NAME = getenv('EXPERIMENT_NAME');
+PARTICIPANT_ID  = getenv('PARTICIPANT_ID');
+
+% 1a.  Basic sanity checks
+assert(~isempty(ROOT_DIR),       'TMS_EEG_ROOT_DIR is not set.');
+assert(isfolder(ROOT_DIR),       'Folder "%s" does not exist.', ROOT_DIR);
+
+%% ---------------------------------------------------------------
+%  2.  Build paths (MATLAB’s fullfile avoids slash/back-slash issues)
+data_root = fullfile(ROOT_DIR, EXPERIMENT_NAME, PARTICIPANT_ID);
+
+digitization_file = fullfile(data_root, 'digitization.csv');
+assert(isfile(digitization_file), ...
+       'Digitalization file "%s" does not exist.', digitization_file);
+
+session = 'Pos10_80';              % ← adjust if you change session names
+
+
+vhdr_file   = fullfile(data_root, [session '.vhdr']);
+assert(isfile(vhdr_file), ...
+       'Session file "%s" does not exist.', vhdr_file);
+
+
+
+%% ---------------------------------------------------------------
+%  3.  Launch EEGLAB and import the BrainVision recording
+[ALLEEG,EEG,CURRENTSET,ALLCOM] = eeglab;
+
+EEG = pop_loadbv(data_root, [session '.vhdr']);
+
+EEG = eeg_checkset(EEG);   % housekeeping + GUI refresh
+EEG.setname = sprintf('%s_%s_%s', EXPERIMENT_NAME, PARTICIPANT_ID, session);
+
+% OPTIONAL: save an immediate .set copy so the rest of the pipeline
+% can reload quickly if you crash or want to inspect intermediate stages
+%EEG = pop_saveset(EEG, ...
+%         'filename', [EEG.setname '_raw.set'], ...
+%         'filepath',  data_root);
+
+%PIPELINE_NAME = "TESA_ICA";
+
+
+%% -----------------------------------------------------------------
+
+
+% replace the channel names
+
+channel_names = { ...
+    'EEG 001','EEG 002','EEG 003','EEG 004','EEG 005','EEG 006','EEG 007','EEG 008', ...
+    'EEG 009','EEG 010','EEG 011','EEG 012','EEG 013','EEG 014','EEG 015','EEG 016', ...
+    'EEG 017','EEG 018','EEG 019','EEG 020','EEG 021','EEG 022','EEG 023','EEG 024', ...
+    'EEG 025','EEG 026','EEG 027','EEG 028','EEG 029','EEG 030','EEG 031','EEG 032', ...
+    'EMG 001',  ...                            % 33rd channel
+    'EEG 033','EEG 034','EEG 035','EEG 036','EEG 037','EEG 038','EEG 039','EEG 040', ...
+    'EEG 041','EEG 042','EEG 043','EEG 044','EEG 045','EEG 046','EEG 047','EEG 048', ...
+    'EEG 049','EEG 050','EEG 051','EEG 052','EEG 053','EEG 054','EEG 055','EEG 056', ...
+    'EEG 057','EEG 058','EEG 059','EEG 060','EEG 061','EEG 062','EEG 063','EEG 064' };
+
+assert(numel(EEG.chanlocs) == numel(channel_names), ...
+       'Dataset has %d channels but you supplied %d names.', ...
+       numel(EEG.chanlocs), numel(channel_names));
+
+for k = 1:numel(channel_names)
+    EEG.chanlocs(k).labels = channel_names{k};
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

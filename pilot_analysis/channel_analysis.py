@@ -12,7 +12,7 @@ from utils import visualize_digitalization_file_3d, visualize_digitalization_fil
 
 load_dotenv()  # Loads from default .env file
 
-channel_names = [ 'EEG 001', 'EEG 002', 'EEG 003', 'EEG 004', 'EEG 005', 'EEG 006', 'EEG 007', 'EEG 008',
+channel_names = ['EEG 001', 'EEG 002', 'EEG 003', 'EEG 004', 'EEG 005', 'EEG 006', 'EEG 007', 'EEG 008',
                 'EEG 009', 'EEG 010', 'EEG 011', 'EEG 012', 'EEG 013', 'EEG 014', 'EEG 015', 'EEG 016',
                 'EEG 017', 'EEG 018', 'EEG 019', 'EEG 020', 'EEG 021', 'EEG 022', 'EEG 023', 'EEG 024',
                 'EEG 025', 'EEG 026', 'EEG 027', 'EEG 028', 'EEG 029', 'EEG 030', 'EEG 031', 'EEG 032',
@@ -45,7 +45,7 @@ session = 'Pos10_80'
 
 # session_path = Path(TMS_EEG_ROOT_DIR) / session / Path(session+'.vhdr')
 
-session_path = Path(TMS_EEG_ROOT_DIR) / EXPERIMENT_NAME / PARTICIPANT_ID / session / Path(session+'.vhdr')
+session_path = Path(TMS_EEG_ROOT_DIR) / EXPERIMENT_NAME / PARTICIPANT_ID / Path(session+'.vhdr')
 
 
 assert session_path.exists(), f"Session file {session_path} does not exist."
@@ -83,16 +83,26 @@ events, event_id = mne.events_from_annotations(raw)
 
 # create epochs
 epochs = mne.Epochs(raw, events, event_id=stimulus_event_id,
-                    tmin=-1, tmax=1,  # 1 second before and after the event
-                    baseline=(-0.2, -0.02),  # baseline correction from -200 ms to 0 ms
+                    tmin=-0.02, tmax=0.0,  # 1 second before and after the event
+                    baseline=None,
                     preload=True
                     )
 
+
+
+# evoked response
 evoked = epochs.average()
 
-# visualize epochs
+# visualize the evoked response
 evoked.plot(ylim=dict(eeg=[-300, 300]))
 
+
+
+
+
+# # visualize epochs
+# evoked.plot(ylim=dict(eeg=[-300, 300]))
+#
 browser = epochs.plot(
     n_epochs   = 3,      # whatever you like
     n_channels = 5,
@@ -100,13 +110,24 @@ browser = epochs.plot(
     block      = True     # blocks script until you close the window
 )
 
+
+
+
+
+
+
+
+
+
+
+
 # print("Number of epochs:", len(epochs))
 
 
 
-# browser = raw.plot(
-#     n_channels = len(raw.ch_names),  # show every channel
-#     duration   = 20,                 # seconds visible in one screenful
-#     scalings   = 'auto',             # per‑channel autoscaling
-#     block      = True                # pause script until window closes
-# )
+browser = raw.plot(
+    n_channels = len(raw.ch_names),  # show every channel
+    duration   = 20,                 # seconds visible in one screenful
+    scalings   = 'auto',             # per‑channel autoscaling
+    block      = True                # pause script until window closes
+)
