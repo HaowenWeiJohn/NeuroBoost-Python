@@ -12,24 +12,28 @@ from utils import visualize_digitalization_file_3d, visualize_digitalization_fil
 
 load_dotenv()  # Loads from default .env file
 
-channel_names = ['EEG 001', 'EEG 002', 'EEG 003', 'EEG 004', 'EEG 005', 'EEG 006', 'EEG 007', 'EEG 008',
-                'EEG 009', 'EEG 010', 'EEG 011', 'EEG 012', 'EEG 013', 'EEG 014', 'EEG 015', 'EEG 016',
-                'EEG 017', 'EEG 018', 'EEG 019', 'EEG 020', 'EEG 021', 'EEG 022', 'EEG 023', 'EEG 024',
-                'EEG 025', 'EEG 026', 'EEG 027', 'EEG 028', 'EEG 029', 'EEG 030', 'EEG 031', 'EEG 032',
-                'EMG 001',
-                'EEG 033', 'EEG 034', 'EEG 035', 'EEG 036', 'EEG 037', 'EEG 038', 'EEG 039', 'EEG 040',
-                'EEG 041', 'EEG 042', 'EEG 043', 'EEG 044', 'EEG 045', 'EEG 046', 'EEG 047', 'EEG 048',
-                'EEG 049', 'EEG 050', 'EEG 051', 'EEG 052', 'EEG 053', 'EEG 054', 'EEG 055', 'EEG 056',
-                'EEG 057', 'EEG 058', 'EEG 059', 'EEG 060', 'EEG 061', 'EEG 062', 'EEG 063', 'EEG 064',
-                ]
+# channel_names = ['EEG 001', 'EEG 002', 'EEG 003', 'EEG 004', 'EEG 005', 'EEG 006', 'EEG 007', 'EEG 008',
+#                 'EEG 009', 'EEG 010', 'EEG 011', 'EEG 012', 'EEG 013', 'EEG 014', 'EEG 015', 'EEG 016',
+#                 'EEG 017', 'EEG 018', 'EEG 019', 'EEG 020', 'EEG 021', 'EEG 022', 'EEG 023', 'EEG 024',
+#                 'EEG 025', 'EEG 026', 'EEG 027', 'EEG 028', 'EEG 029', 'EEG 030', 'EEG 031', 'EEG 032',
+#                 'EMG 001',
+#                 'EEG 033', 'EEG 034', 'EEG 035', 'EEG 036', 'EEG 037', 'EEG 038', 'EEG 039', 'EEG 040',
+#                 'EEG 041', 'EEG 042', 'EEG 043', 'EEG 044', 'EEG 045', 'EEG 046', 'EEG 047', 'EEG 048',
+#                 'EEG 049', 'EEG 050', 'EEG 051', 'EEG 052', 'EEG 053', 'EEG 054', 'EEG 055', 'EEG 056',
+#                 'EEG 057', 'EEG 058', 'EEG 059', 'EEG 060', 'EEG 061', 'EEG 062', 'EEG 063', 'EEG 064',
+#                 ]
 
-electrodes = [
+channel_names = [
     'Fp1', 'Fpz', 'Fp2',
     'AF7', 'AF3', 'AFZ', 'AF4', 'AF8',
     'F7', 'F3', 'F1', 'FZ', 'F2', 'F4', 'F8',
     'FT7', 'FC5', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'FC6', 'FT8',
     'C5', 'C3', 'C1', 'Cz', 'C2', 'C4', 'C6',
-    'TP9', 'CP5', 'CP3', 'CP1', 'CPz', 'CP2', 'CP4', 'CP6', 'TP10',
+    'TP9',
+
+    'EMG1',  # EMG channel
+
+    'CP5', 'CP3', 'CP1', 'CPz', 'CP2', 'CP4', 'CP6', 'TP10',
     'P9', 'P7', 'P5', 'P3', 'P1', 'Pz', 'P2', 'P4', 'P6', 'P8', 'P10',
     'PO9', 'PO7', 'PO3', 'POz', 'PO4', 'PO8', 'PO10',
     'O9', 'O1', 'Oz', 'O2', 'O10',
@@ -97,7 +101,7 @@ events, event_id = mne.events_from_annotations(raw)
 
 # create epochs
 epochs = mne.Epochs(raw, events, event_id=stimulus_event_id,
-                    tmin=-0.02, tmax=0.0,  # 1 second before and after the event
+                    tmin=-1, tmax=1,  # 1 second before and after the event
                     baseline=None,
                     preload=True
                     )

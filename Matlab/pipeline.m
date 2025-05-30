@@ -176,26 +176,3 @@ output = pop_tesa_peakoutput( EEG, 'tepName', 'Parietal', 'calcType', 'amplitude
 pop_tesa_plot( EEG, 'tepType', 'ROI', 'tepName', 'Parietal', 'xlim', [-100 500], 'ylim', [], 'CI','off','plotPeak','on' );
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
