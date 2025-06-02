@@ -83,7 +83,7 @@ data_root = fullfile(ROOT_DIR, EXPERIMENT_NAME, PARTICIPANT_ID, 'data');
 
 % -------------------------------------------------------------------------
 %    Dataset identifier - change this to match your file naming convention
-current_datasets_savename = 'Pos10_80';   % e.g., stimulation condition/session
+current_datasets_savename = 'Center_110_part1';   % e.g., stimulation condition/session
 % -------------------------------------------------------------------------
 
 %    Locate BrainVision header file (.vhdr) containing EEG data
@@ -113,7 +113,7 @@ EEG.setname = sprintf('%s_%s_%s', ...
 %    Remove non-EEG channels and standardize electrode nomenclature
 
 % Remove auxiliary channels that don't contain EEG data
-% 'Input 33' is typically an external trigger channel in Biosemi systems
+% 'Input 33' is an EMG channel that is not needed for TMS-EEG analysis
 EEG = pop_select(EEG, 'nochannel', {'Input 33'});
 
 %    Apply standard 10-5 electrode system naming convention
@@ -159,6 +159,7 @@ fprintf('Data dimensions  : [%d channels x %d time points x %d epochs]\n', ...
         size(EEG.data, 1), size(EEG.data, 2), size(EEG.data, 3));
 fprintf('Channel labels   : %s ... %s\n', EEG.chanlocs(1).labels, EEG.chanlocs(end).labels);
 
+
 %% Save initial dataset after channel setup
 pop_saveset(...
     EEG,...
@@ -179,6 +180,8 @@ EEG = pop_tesa_findpulse(EEG,'Cz', ...         % Reference electrode for pulse d
                          'plots','on');         % Display detection results
 EEG = eeg_checkset(EEG);
 
+
+
 %% 7. Automatic bad channel detection and removal ---------------------------
 %    Identify and remove channels with excessive noise or artifacts
 %    This step is crucial for preventing bad channels from contaminating ICA
@@ -197,6 +200,7 @@ EEG = pop_rejchan(EEG, 'elec', 1:size(EEG.data,1) ,...
 EEG.setname = [current_datasets_savename '_ChanRem'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
 
+
 %% =======================================================================
 %  STAGE 3: EPOCHING AND INITIAL ARTIFACT REMOVAL
 %  =======================================================================
@@ -210,6 +214,17 @@ EEG = pop_epoch( EEG, { trigger_label }, epoching_long , 'epochinfo', 'yes');
 EEG.setname = [current_datasets_savename '_epochs'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
 
+% plot and save the figures
+visualize_eeg_evoked( ...
+        EEG, ...                 % Epoched dataset
+        demeaning_interval, ...  % Use demeaning interval as baseline window
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV (wider range for less processed data)
+        'After Epoching - TMS-evoked potentials', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_after_epoching']); % filename base
+
 %% 9. Demeaning correction (DC removal) -------------------------------------
 %    Remove the mean voltage across each epoch to eliminate DC drifts
 %    This step improves ICA decomposition by centering the data around zero
@@ -218,6 +233,17 @@ EEG = pop_rmbase( EEG, demeaning_interval);
 % Save demeaned dataset
 EEG.setname = [current_datasets_savename '_Demeaning'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
+
+% plot and save the figures
+visualize_eeg_evoked( ...
+        EEG, ...                 % Demeaned dataset
+        [], ...                  % No additional baseline correction (already demeaned)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV
+        'After Demeaning - TMS-evoked potentials', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_after_demeaning']); % filename base
 
 %% 10. Remove TMS pulse artifact (first pass) ------------------------------
 %     Replace data around TMS pulse with flat line to prevent contamination
@@ -228,6 +254,18 @@ EEG = pop_tesa_removedata( EEG, interp_interval);
 EEG.setname = [current_datasets_savename '_TMSpulseREM'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
 
+% plot and save the figures
+% Note: This will show the flat line where TMS pulse was removed
+visualize_eeg_evoked( ...
+        EEG, ...                 % Dataset with TMS pulse removed
+        [], ...                  % No baseline correction (data already demeaned)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV
+        'After TMS Pulse Removal - showing flat interpolation window', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_after_tms_pulse_removal']); % filename base
+
 %% 11. Interpolate missing data around TMS pulse (first pass) ---------------
 %     Use cubic spline interpolation to fill the gap left by pulse removal
 %     [1,1] means use 1 ms before and after the removed window for interpolation
@@ -236,6 +274,18 @@ EEG = pop_tesa_interpdata( EEG, 'cubic', [1,1] );
 % Save dataset with interpolated TMS pulse
 EEG.setname = [current_datasets_savename '_TMSpInt'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
+
+% plot and save the figures
+visualize_eeg_evoked( ...
+        EEG, ...                 % Dataset with interpolated TMS pulse
+        [], ...                  % No baseline correction (data already demeaned)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV
+        'After TMS Pulse Interpolation', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_after_tms_pulse_interpolation']); % filename base
+
 
 %% =======================================================================
 %  STAGE 4: DOWNSAMPLING AND TRIAL REJECTION
@@ -275,6 +325,17 @@ EEG = pop_tesa_removedata( EEG, interp_interval );
 
 EEG.setname = [current_datasets_savename '_TMSpulse0'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
+
+% Plot and save figures before first ICA
+visualize_eeg_evoked( ...
+        EEG, ...                 % Data prepared for first ICA
+        [], ...                  % No baseline correction (data already demeaned)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV
+        'Before First ICA - Data prepared for component analysis', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_before_first_ICA']); % filename base
 
 %% 15. First ICA decomposition for TMS-evoked muscle artifacts --------------
 %     Decompose EEG data into independent components to isolate artifacts
@@ -316,6 +377,17 @@ EEG = pop_tesa_compselect( EEG, ...
 
 EEG.setname = [current_datasets_savename '_CompSel1'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
+
+% Plot and save figures after first component selection
+visualize_eeg_evoked( ...
+        EEG, ...                 % Data after first ICA component removal
+        [], ...                  % No baseline correction (data already demeaned)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV
+        'After First ICA - TMS-muscle artifacts removed', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_after_first_ICA']); % filename base
 
 %% =======================================================================
 %  STAGE 6: FILTERING AND SECOND ICA DECOMPOSITION
@@ -360,6 +432,17 @@ EEG = pop_tesa_removedata( EEG, interp_interval );
 EEG.setname = [current_datasets_savename '_TMSp0'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
 
+% Plot and save figures before second ICA
+visualize_eeg_evoked( ...
+        EEG, ...                 % Filtered data prepared for second ICA
+        [], ...                  % No baseline correction (data already demeaned)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-30 30], ...            % Amplitude scale: ±30 µV (smaller range after filtering)
+        'Before Second ICA - After filtering, ready for final component analysis', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_before_second_ICA']); % filename base
+
 %% 22. Second ICA decomposition for remaining artifacts ---------------------
 %     Final ICA run to remove any remaining artifacts (blinks, movements, etc.)
 EEG = pop_tesa_fastica( EEG, 'approach', 'symm', 'g', 'tanh', 'stabilization', 'off' );
@@ -398,6 +481,17 @@ EEG = pop_tesa_compselect( EEG,...
 EEG.setname = [current_datasets_savename '_CompSel2'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
 
+% Plot and save figures after second component selection
+visualize_eeg_evoked( ...
+        EEG, ...                 % Data after comprehensive artifact removal
+        [], ...                  % No baseline correction (data already demeaned)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-30 30], ...            % Amplitude scale: ±30 µV
+        'After Second ICA - All artifacts removed (muscle, blink, movement, noise)', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_after_second_ICA']); % filename base
+
 %% =======================================================================
 %  STAGE 7: FINAL PROCESSING AND RECONSTRUCTION
 %  =======================================================================
@@ -430,6 +524,17 @@ EEG = pop_reref( EEG, final_ref);
 EEG.setname = [current_datasets_savename '_AvgReref'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
 
+% Plot and save figures after re-referencing
+visualize_eeg_evoked( ...
+        EEG, ...                 % Data after average re-referencing
+        [], ...                  % No baseline correction (will be applied next)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-25 25], ...            % Amplitude scale: ±25 µV (tighter range after re-referencing)
+        'After Average Re-referencing - Ready for final baseline correction', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_after_average_reref']); % filename base
+
 %% 28. Final baseline correction --------------------------------------------
 %     Remove pre-stimulus baseline to isolate TMS-evoked responses
 %     Baseline window should end before TMS pulse to avoid contamination
@@ -450,23 +555,18 @@ EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_out
 %     Create publication-quality plot of the cleaned TMS-evoked potentials
 %     Display average response across all channels with appropriate scaling
 
-% Generate TMS-evoked potential plot with baseline correction
+% Generate TMS-evoked potential plot with baseline correction and automatic saving
 visualize_eeg_evoked( ...
         EEG, ...                 % Final processed dataset
         baseline_long, ...       % Baseline window (e.g. [-1000 -2] ms)
         [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
         [-20 30], ...            % Amplitude scale: ±25 µV (adjust as needed)
-        'Final TESA-processed TMS-evoked potentials');
+        'Final TESA-processed TMS-evoked potentials', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_Final_scaled_avg_ref']); % filename base
 
-%% 31. Save visualization results -------------------------------------------
-%     Export figures in multiple formats for analysis and publication
-outfile = fullfile(current_output_folder, ...
-                   [current_datasets_savename '_Final_scaled_avg_ref']);
-
-saveas(gcf, [outfile '.fig']);   % MATLAB figure format for further editing
-saveas(gcf, [outfile '.png']);   % PNG format for presentations/papers
-
-close(gcf);          % Clean up figure window
+%% 31. Pipeline completion and cleanup --------------------------------------
 diary off;           % Stop logging if active
 
 % ===========================================================================
