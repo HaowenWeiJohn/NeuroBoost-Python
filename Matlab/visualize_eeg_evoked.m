@@ -1,4 +1,4 @@
-function visualizeEEGEvoked(EEG, baselineWindow, timeLimits, amplitudeLimits, plotTitle)
+function visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, plotTitle)
     % visualizeEEGEvoked - Visualizes the EEG evoked potentials after basic preprocessing.
     %
     % Syntax:

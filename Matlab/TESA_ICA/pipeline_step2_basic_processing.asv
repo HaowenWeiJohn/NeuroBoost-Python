@@ -15,8 +15,6 @@ clear; close all; clc;
 PIPELINE_NAME = 'TESA_ICA';
 STEP_NAME     = 'step2_basic_processing';
 
-activity_prob = 5;
-
 % -------------------------------------------------------------------------
 % >>> EDIT THIS IF YOU PROCESS A DIFFERENT SESSION <<<
 session = 'Pos10_80';          % e.g. 'Pos05_60', 'Baseline', …
@@ -54,7 +52,7 @@ EEG = eeg_checkset(EEG);
 
 %% 3 ─ Reject noisy channels (“band electrodes”) --------------------------
 origLabels = {EEG.chanlocs.labels};
-[EEG,badIdx] = pop_rejchan(EEG, 'elec', 1:size(EEG.data,1) ,'threshold',activity_prob,'norm','on','measure','kurt');
+[EEG,badIdx] = pop_rejchan(EEG,'threshold',5,'norm','on','measure','kurt');
 if ~isempty(badIdx)
     fprintf('Rejected channels: %s\n', strjoin(origLabels(badIdx),', '));
 end
@@ -65,7 +63,7 @@ EEG = pop_epoch(EEG,{'TMS'},[-1 1],'epochinfo','yes');
 EEG = eeg_checkset(EEG);
 
 %% 5 ─ Remove –2 … +5 ms artifact & interpolate ---------------------------
-EEG = pop_tesa_removedata(EEG,[-2 5]);
+EEG = pop_tesa_removedata(EEG,[-200 200]);
 EEG = pop_tesa_interpdata(EEG,'cubic',[1 1]);
 EEG = eeg_checkset(EEG);
 
@@ -95,10 +93,6 @@ close(gcf);
 if EEG.srate ~= 1000
     EEG = pop_resample(EEG,1000);
 end
-
-
-
-
 
 %% 8 ─ Save dataset --------------------------------------------------------
 save_fname = sprintf('%s-%s-%s-%s.set', ...
