@@ -350,7 +350,7 @@ EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_out
 %     This first pass focuses specifically on muscle artifacts in the 11-30 ms window
 
 EEG = pop_tesa_compselect( EEG, ...
-    'compCheck','off',...              % Disable manual component checking
+    'compCheck','on',...              % Disable manual component checking
     'comps', 15, ...                   % Number of components to evaluate
     'figSize','small',...              % Component plot size
     'plotTimeX',[-100 399],...         % Time window for component visualization
