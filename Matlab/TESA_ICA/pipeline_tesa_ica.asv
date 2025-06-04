@@ -350,7 +350,7 @@ EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_out
 %     This first pass focuses specifically on muscle artifacts in the 11-30 ms window
 
 EEG = pop_tesa_compselect( EEG, ...
-    'compCheck','off',...              % Disable manual component checking
+    'compCheck','on',...              % Disable manual component checking
     'comps', 15, ...                   % Number of components to evaluate
     'figSize','small',...              % Component plot size
     'plotTimeX',[-100 399],...         % Time window for component visualization
@@ -453,7 +453,7 @@ EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_out
 %% 23. Second component selection (comprehensive artifact removal) ----------
 %     Remove all types of artifacts in this final component selection pass
 EEG = pop_tesa_compselect( EEG,...
-    'compCheck','off',...              % Disable manual checking
+    'compCheck','on',...              % Disable manual checking
     'comps',[],...                     % Evaluate all components
     'figSize','medium',...             % Larger plots for detailed inspection
     'plotTimeX',[-100 399],...         % Time window for visualization
@@ -462,7 +462,7 @@ EEG = pop_tesa_compselect( EEG,...
     'tmsMuscleThresh',8,...            % Same threshold as before
     'tmsMuscleWin',[11 30],...         % TMS-muscle time window
     'tmsMuscleFeedback','off',...      % Disable feedback
-    'blink','off',...                   % Enable blink artifact detection
+    'blink','on',...                   % Enable blink artifact detection
     'blinkThresh',2.5,...              % Blink detection sensitivity
     'blinkElecs',{'Fp1','Fp2'},...     % Frontal electrodes for blinks
     'blinkFeedback','off',...          % Disable blink feedback

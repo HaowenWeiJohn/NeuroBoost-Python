@@ -22,7 +22,7 @@ clear; close all; clc;
 % ===========================================================================
 
 % Define the pipeline name for tracking/logging purposes
-PIPELINE_NAME = 'SOUND_SSP-SIR';   
+PIPELINE_NAME = 'SOUND-SSPSIR';   
 
 %% =======================================================================
 %  PREPROCESSING PARAMETERS
@@ -38,7 +38,7 @@ baseline_long = [-1000 -2];      % Baseline correction window (ms)
 demeaning_interval = [-1000 999]; % Time window for epoch demeaning (ms)
 
 % TMS artifact handling
-trigger_original = 16;            % TMS trigger code in EEG data
+trigger_label = 'TMS';  % Define trigger label for TMS pulses
 interp_interval = [-1 6];        % Time window around TMS pulse to interpolate (ms)
                                   % [-1 6] captures direct TMS artifact and recharge
 
@@ -47,7 +47,7 @@ lambda_value = 0.1;               % Regularization parameter for minimum-norm es
                                   % 0.1 was used in the original SOUND paper
 iter = 5;                         % Number of iterations for noise estimation
                                   % 5 iterations found sufficient in original studies
-ref_channel = 'TP9';              % Reference channel for spherical lead field creation
+ref_channel = 'C4';              % Reference channel for spherical lead field creation
 
 % SSP-SIR parameters
 ssp_sir_timerange = [-1 50];      % Time window for SSP-SIR muscle artifact estimation (ms)
@@ -59,7 +59,7 @@ max_SSP_SIR_PC_to_remove = 6;     % Maximum number of principal components to te
 downsample = 1000;                % Target sampling rate (Hz) after preprocessing
 low_pass_filt = 90;              % Low-pass filter cutoff (Hz)
 hp_filt = 1;                     % High-pass filter cutoff (Hz) - removes slow drifts
-notch_filt = [48 52];            % Notch filter range (Hz) for line noise removal
+notch_filt = [58 62];            % Notch filter range (Hz) for line noise removal
 final_ref = [];                  % Final reference: [] = average reference
 
 %% =======================================================================
@@ -87,7 +87,7 @@ data_root = fullfile(ROOT_DIR, EXPERIMENT_NAME, PARTICIPANT_ID, 'data');
 
 % -------------------------------------------------------------------------
 %    Dataset identifier - change this to match your file naming convention
-current_datasets_savename = 'Center_110_part1';   % e.g., stimulation condition/session
+current_datasets_savename = 'Pos10_80';   % e.g., stimulation condition/session
 % -------------------------------------------------------------------------
 
 %    Locate BrainVision header file (.vhdr) containing EEG data
@@ -113,16 +113,81 @@ diary([current_output_folder '\' current_datasets_savename '_workspace_SOUND_SSP
 [ALLEEG, EEG, CURRENTSET, ALLCOM] = eeglab;
 EEG = pop_loadbv(data_root, [current_datasets_savename '.vhdr']);
 EEG = eeg_checkset(EEG);
+EEG.setname = sprintf('%s_%s_%s', ...
+        EXPERIMENT_NAME, PARTICIPANT_ID, current_datasets_savename);
 
-%% 4. Setup channel locations and remove auxiliary channels ---------------
-%    Standardize electrode nomenclature and remove non-EEG channels
+%% 4. Preprocessing: Clean up channel list and apply standard names --------
+%    Remove non-EEG channels and standardize electrode nomenclature
+
+% Remove auxiliary channels that don't contain EEG data
+% 'Input 33' is an EMG channel that is not needed for TMS-EEG analysis
+EEG = pop_select(EEG, 'nochannel', {'Input 33'});
+
+%    Apply standard 10-5 electrode system naming convention
+%    This ensures compatibility with EEGLAB functions and facilitates
+%    cross-study comparisons. Order should match your cap layout.
+channel_names = {
+    'Fp1', 'Fpz', 'Fp2', ...
+    'AF7', 'AF3', 'AFZ', 'AF4', 'AF8', ...
+    'F7', 'F3', 'F1', 'FZ', 'F2', 'F4', 'F8', ...
+    'FT7', 'FC5', 'FC3', 'FC1', 'FCz', 'FC2', 'FC4', 'FC6', 'FT8', ...
+    'C5', 'C3', 'C1', 'Cz', 'C2', 'C4', 'C6', ...
+    'TP9', 'CP5', 'CP3', 'CP1', 'CPz', 'CP2', 'CP4', 'CP6', 'TP10', ...
+    'P9', 'P7', 'P5', 'P3', 'P1', 'Pz', 'P2', 'P4', 'P6', 'P8', 'P10', ...
+    'PO9', 'PO7', 'PO3', 'POz', 'PO4', 'PO8', 'PO10', ...
+    'O9', 'O1', 'Oz', 'O2', 'O10', ...
+    'Iz'};
+
+%    Validate channel count matches expected electrode configuration
+assert(numel(EEG.chanlocs) == numel(channel_names), ...
+       'Dataset has %d channels but you supplied %d names.', ...
+       numel(EEG.chanlocs), numel(channel_names));
+
+%    Assign standardized channel labels to electrode locations
+for k = 1:numel(channel_names)
+    EEG.chanlocs(k).labels = channel_names{k};
+end
+
+%    Update channel locations and perform internal consistency checks
+EEG = eeg_checkset(EEG);
+% Load standard 10-5 electrode positions for topographic plotting
 EEG = pop_chanedit(EEG, 'lookup','standard-10-5-cap385.elp');
-EEG = pop_select(EEG, 'nochannel', {'HEOG', 'VEOG'}); % Remove EOG channels
 
-% Define EEG electrodes and reference
-[EEG.chanlocs(1:end).type] = deal('EEG');
+%% 5. Display basic EEG dataset information --------------------------------
+%    Provide overview of loaded dataset characteristics
+fprintf('\n--- EEG Dataset Overview ---\n');
+fprintf('Set name         : %s\n', EEG.setname);
+fprintf('Number of channels: %d\n', EEG.nbchan);
+fprintf('Number of data points per channel: %d\n', EEG.pnts);
+fprintf('Sampling rate    : %.2f Hz\n', EEG.srate);
+fprintf('Duration         : %.2f seconds\n', EEG.pnts / EEG.srate);
+fprintf('Number of epochs : %d\n', EEG.trials);
+fprintf('Data dimensions  : [%d channels x %d time points x %d epochs]\n', ...
+        size(EEG.data, 1), size(EEG.data, 2), size(EEG.data, 3));
+fprintf('Channel labels   : %s ... %s\n', EEG.chanlocs(1).labels, EEG.chanlocs(end).labels);
 
-%% 5. Create spherical lead field matrix for SOUND algorithm --------------
+%% Save initial dataset after channel setup
+pop_saveset(...
+    EEG,...
+    'filename', [current_datasets_savename '_SetCreation.set'],...
+    'filepath', current_output_folder);
+
+%% =======================================================================
+%  STAGE 2: TMS PULSE DETECTION AND INITIAL PROCESSING
+%  =======================================================================
+
+%% 6. TMS pulse detection and event marking --------------------------------
+%    Automatically detect TMS pulses in the EEG data using the Cz electrode
+%    This creates event markers that will be used for epoching
+
+EEG = pop_tesa_findpulse(EEG,'Cz', ...         % Reference electrode for pulse detection
+                         'refract',4, ...       % Refractory period (ms) between pulses
+                         'rate',1e4, ...        % Pulse detection threshold rate
+                         'tmsLabel', trigger_label, ... % Event label for detected pulses
+                         'plots','on');         % Display detection results
+EEG = eeg_checkset(EEG);
+
+%% 7. Create spherical lead field matrix for SOUND algorithm --------------
 %    This matrix allows conversion between sensor and source space
 fprintf('\n--- Creating Lead Field Matrix ---\n');
 
@@ -137,44 +202,37 @@ EEG_dummy = pop_chanedit(EEG_dummy, 'lookup', 'standard-10-5-cap385.elp');
 % Construct spherical lead field matrix
 [LFM_sphere] = construct_spherical_lead_field(EEG_dummy, [],[],[],[],[],[],[],1000);
 
-% Save original dataset
-EEG.setname = current_datasets_savename;
-EEG = pop_saveset(EEG, 'filename', [EEG.setname '_orig'], ...
-    'filepath', current_output_folder);
-
-%% 6. High-pass filtering to remove slow drifts ---------------------------
+%% 8. High-pass filtering to remove slow drifts ---------------------------
 EEG = pop_eegfiltnew(EEG, 'locutoff', hp_filt, 'plotfreqz', 1);
 close; % Close filter response plot
 
-%% 7. Epoching around TMS pulses ------------------------------------------
-EEG = pop_epoch(EEG, {['S ', num2str(trigger_original)]}, epoching_long, 'epochinfo', 'yes');
+%% 9. Epoching around TMS pulses ------------------------------------------
+EEG = pop_epoch(EEG, {trigger_label}, epoching_long, 'epochinfo', 'yes');
 
-%% 8. TMS pulse artifact removal and interpolation ------------------------
+%% 10. TMS pulse artifact removal and interpolation ------------------------
 EEG_before_interpolation = EEG; % Store dataset before interpolation
 EEG = pop_tesa_removedata(EEG, interp_interval); % Remove TMS pulse
 EEG = pop_tesa_interpdata(EEG, 'cubic', [1,1]); % Interpolate with cubic spline
 
-%% 9. Baseline correction ------------------------------------------------
+%% 11. Baseline correction ------------------------------------------------
 EEG = pop_rmbase(EEG, baseline_long);
 
-%% 10. Re-reference lead field matrix to specified reference -------------
+%% 12. Re-reference lead field matrix to specified reference -------------
 ref_chan_num = find(strcmp({EEG_dummy.chanlocs.labels}, ref_channel));
 LFM_sphere_ref = repmat(LFM_sphere(ref_chan_num,:), size(LFM_sphere, 1)-1, 1);
 LFM_sphere = LFM_sphere([1:ref_chan_num-1 ref_chan_num+1:end],:) - LFM_sphere_ref;
 
-%% 11. Visualization after basic preprocessing ----------------------------
-EEG_epoch = EEG;
-EEG_epoch = pop_rmbase(EEG_epoch, [-750 0]);
-TEP_dummy = mean(EEG_epoch.data, 3);
-
-figure
-plot(EEG_epoch.times, TEP_dummy(:,:));
-xlim([-100 400]);
-ylim([-50 50]);
-title('After Basic Pre-processing');
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_basic_prep']);
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_basic_prep'], 'png');
-close;
+%% 13. Visualization after basic preprocessing ----------------------------
+% plot and save the figures
+visualize_eeg_evoked( ...
+        EEG, ...                 % Basic preprocessed dataset
+        [-750 0], ...            % Baseline window for visualization
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV (wider range for less processed data)
+        'After Basic Pre-processing', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_basic_prep']); % filename base
 
 % Save dataset and lead field
 EEG.setname = [current_datasets_savename '_basic_prep'];
@@ -185,7 +243,7 @@ save([current_output_folder '\LFM_sphere'], 'LFM_sphere');
 fprintf('Basic preprocessing completed.\n');
 
 %% =======================================================================
-%  STAGE 2: SOUND ALGORITHM FOR CHANNEL-SPECIFIC NOISE REMOVAL
+%  STAGE 3: SOUND ALGORITHM FOR CHANNEL-SPECIFIC NOISE REMOVAL
 %  =======================================================================
 
 fprintf('\n--- Starting SOUND Algorithm ---\n');
@@ -266,18 +324,16 @@ end
 fprintf('SOUND processing completed in %.2f minutes.\n', toc/60);
 
 %% 12. Visualization after SOUND ------------------------------------------
-EEG_epoch = EEG_clean;
-EEG_epoch = pop_rmbase(EEG_epoch, [-750 0]);
-TEP_dummy = mean(EEG_epoch.data, 3);
-
-figure
-plot(EEG_epoch.times, TEP_dummy(:,:));
-xlim([-100 400]);
-ylim([-50 50]);
-title('After SOUND Algorithm');
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_afterSOUND']);
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_afterSOUND'], 'png');
-close all;
+% plot and save the figures
+visualize_eeg_evoked( ...
+        EEG_clean, ...           % Dataset after SOUND algorithm
+        [-750 0], ...            % Baseline window for visualization
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV
+        'After SOUND Algorithm', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_afterSOUND']); % filename base
 
 % Save dataset after SOUND
 EEG = EEG_clean;
@@ -286,55 +342,6 @@ pop_saveset(EEG, 'filename', [current_datasets_savename '_afterSOUND'], ...
     'filepath', current_output_folder);
 
 fprintf('SOUND algorithm completed.\n');
-
-%% =======================================================================
-%  STAGE 3: MANUAL ARTIFACT REJECTION
-%  =======================================================================
-
-fprintf('\n--- Manual Artifact Rejection ---\n');
-
-% Load dataset from previous stage
-EEG = pop_loadset('filename', [current_datasets_savename '_afterSOUND.set'], ...
-    'filepath', current_output_folder);
-
-% Manual epoch rejection with visual inspection
-fprintf('Opening manual artifact rejection interface...\n');
-fprintf('Instructions: Click on bad epochs (they turn yellow), then press UPDATE MARKS\n');
-
-eeglab redraw
-close all
-pop_eegplot(EEG, 1, 1, 0); % Plot data for manual inspection
-waitfor(findobj('parent', gcf, 'string', 'UPDATE MARKS'), 'userdata');
-close all
-
-% Save indices of rejected epochs
-rejected_epochs = find(EEG.reject.rejmanual);
-fprintf('Rejected epochs: %s\n', num2str(rejected_epochs));
-save([current_output_folder '\rejected_epochs'], 'rejected_epochs');
-
-% Remove marked epochs
-EEG = pop_rejepoch(EEG, EEG.reject.rejmanual, 0);
-
-%% 13. Visualization after trial rejection -------------v------------------
-EEG_epoch = EEG;
-EEG_epoch = pop_rmbase(EEG_epoch, [-750 0]);
-TEP_dummy = mean(EEG_epoch.data, 3);
-
-figure
-plot(EEG_epoch.times, TEP_dummy(:,:));
-xlim([-100 400]);
-ylim([-50 50]);
-title('After Trial Rejection');
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_trialrej']);
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_trialrej'], 'png');
-close all;
-
-% Save dataset after trial rejection
-EEG.setname = [current_datasets_savename '_trialrej'];
-pop_saveset(EEG, 'filename', [current_datasets_savename '_trialrej'], ...
-    'filepath', current_output_folder);
-
-fprintf('Manual artifact rejection completed.\n');
 
 %% =======================================================================
 %  STAGE 4: ICA DECOMPOSITION FOR OCULAR ARTIFACTS
@@ -387,18 +394,16 @@ else
 end
 
 %% 15. Visualization after ICA removal ------------------------------------
-EEG_epoch = EEG;
-EEG_epoch = pop_rmbase(EEG_epoch, [-750 0]);
-TEP_dummy = mean(EEG_epoch.data, 3);
-
-figure
-plot(EEG_epoch.times, TEP_dummy(:,:));
-xlim([-100 400]);
-ylim([-50 50]);
-title('After ICA Removal');
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_ICAremoval']);
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_ICAremoval'], 'png');
-close all;
+% plot and save the figures
+visualize_eeg_evoked( ...
+        EEG, ...                 % Dataset after ICA component removal
+        [-750 0], ...            % Baseline window for visualization
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-50 50], ...            % Amplitude scale: ±50 µV
+        'After ICA Removal', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_ICAremoval']); % filename base
 
 % Save dataset after ICA removal
 EEG.setname = [current_datasets_savename '_ICAremoval'];
@@ -473,17 +478,15 @@ for iii = 1:max_SSP_SIR_PC_to_remove
         'filepath', current_output_folder);
     
     % Visualization after SSP-SIR
-    EEG_epoch = EEG;
-    TEP_dummy = mean(EEG_epoch.data, 3);
-    
-    figure
-    plot(EEG_epoch.times, TEP_dummy(:,:));
-    xlim([-100 400]);
-    ylim([-50 50]);
-    title(['After SSP-SIR - PC removed: ' num2str(iii-1)]);
-    saveas(gcf, [current_output_folder '\' current_datasets_savename '_afterSSP-SIR_PCs_' num2str(iii-1)]);
-    saveas(gcf, [current_output_folder '\' current_datasets_savename '_afterSSP-SIR_PCs_' num2str(iii-1)], 'png');
-    close all;
+    visualize_eeg_evoked( ...
+            EEG, ...                 % Dataset after SSP-SIR with current PC removal
+            [], ...                  % No baseline correction (will be done in function if needed)
+            [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+            [-50 50], ...            % Amplitude scale: ±50 µV
+            ['After SSP-SIR - PC removed: ' num2str(iii-1)], ...
+            true, ...                % save_fig: enable automatic figure saving
+            current_output_folder, ... % output_path: directory for saved figures
+            [current_datasets_savename '_afterSSP-SIR_PCs_' num2str(iii-1)]); % filename base
     
     % Create comprehensive visualization with GFP analysis
     EEG_vis = pop_reref(EEG, []);
@@ -596,16 +599,16 @@ EEG = pop_resample(EEG, downsample);
 EEG = pop_rmbase(EEG, baseline_long);
 
 %% 21. Final visualization ------------------------------------------------
-figure
-plot(EEG.times, mean(EEG.data, 3));
-xlim([-100 400]);
-ylim([-20 30]);
-title('Final SOUND + SSP-SIR Processed TEPs');
-xlabel('Time (ms)');
-ylabel('Amplitude (\muV)');
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_Final_scaled_avg_ref']);
-saveas(gcf, [current_output_folder '\' current_datasets_savename '_Final_scaled_avg_ref'], 'png');
-close all;
+% plot and save the figures
+visualize_eeg_evoked( ...
+        EEG, ...                 % Final processed dataset
+        baseline_long, ...       % Baseline window (e.g. [-1000 -2] ms)
+        [-100 400], ...          % Display window: 100 ms pre to 400 ms post-TMS
+        [-20 30], ...            % Amplitude scale: -20 to +30 µV (tighter range after processing)
+        'Final SOUND + SSP-SIR Processed TEPs', ...
+        true, ...                % save_fig: enable automatic figure saving
+        current_output_folder, ... % output_path: directory for saved figures
+        [current_datasets_savename '_Final_scaled_avg_ref']); % filename base
 
 %% 22. Save final processed dataset ---------------------------------------
 EEG.setname = [current_datasets_savename '_Final_SOUND_SSP-SIR_Processed'];
