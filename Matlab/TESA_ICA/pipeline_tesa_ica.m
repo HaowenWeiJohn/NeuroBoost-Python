@@ -23,6 +23,12 @@ clear; close all; clc;
 % Define the pipeline name for tracking/logging purposes
 PIPELINE_NAME = 'TESA_ICA';   
 
+
+% add this to path C:\Program Files\MATLAB\R2024b\toolbox\eeglab2024.2\plugins\TESA1.1.1
+addpath('C:\Program Files\MATLAB\R2024b\toolbox\eeglab2024.2\plugins\TESA1.1.1');
+
+%addpath('C:\Dataset\raw\TMS-EEG_brain_connectivity_BIDS_CIMeC\code\preprocessing_scripts\PLUG-INs\TESA_v1.0.1');
+
 %% =======================================================================
 %  PREPROCESSING PARAMETERS
 %  =======================================================================
@@ -358,22 +364,22 @@ EEG = pop_tesa_compselect( EEG, ...
     'tmsMuscle','on',...               % Enable TMS-muscle artifact detection
     'tmsMuscleThresh',8,...            % Threshold for muscle artifact identification
     'tmsMuscleWin',[11 30],...         % Time window where muscle artifacts occur
-    'tmsMuscleFeedback','off',...      % Disable feedback plots
+    'tmsMuscleFeedback','on',...       % Enable feedback plot
     'blink','off',...                  % Disable blink detection (first pass)
     'blinkThresh',2.5,...              % Blink detection threshold
     'blinkElecs',{'Fp1','Fp2'},...     % Electrodes for blink detection
-    'blinkFeedback','off',...          % Disable blink feedback plots
+    'blinkFeedback','off',...           % Enable blink feedback plots
     'move','off',...                   % Disable movement detection (first pass)
     'moveThresh',2,...                 % Movement detection threshold
     'moveElecs',{'F7','F8'},...        % Electrodes for movement detection
-    'moveFeedback','off',...           % Disable movement feedback plots
+    'moveFeedback','off',...            % Enable movement feedback plots
     'muscle','off',...                 % Disable general muscle detection (first pass)
     'muscleThresh',0.6,...             % General muscle detection threshold
     'muscleFreqWin',[30 100],...       % Frequency window for muscle activity
-    'muscleFeedback','off',...         % Disable muscle feedback plots
+    'muscleFeedback','off',...          % Enable muscle feedback plots
     'elecNoise','off',...              % Disable electrode noise detection (first pass)
     'elecNoiseThresh',4,...            % Electrode noise threshold
-    'elecNoiseFeedback','off' );       % Disable electrode noise feedback
+    'elecNoiseFeedback','off' );        % Enable electrode noise feedback
 
 EEG.setname = [current_datasets_savename '_CompSel1'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
@@ -452,31 +458,31 @@ EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_out
 
 %% 23. Second component selection (comprehensive artifact removal) ----------
 %     Remove all types of artifacts in this final component selection pass
-EEG = pop_tesa_compselect( EEG,...
-    'compCheck','off',...              % Disable manual checking
-    'comps',[],...                     % Evaluate all components
-    'figSize','medium',...             % Larger plots for detailed inspection
-    'plotTimeX',[-100 399],...         % Time window for visualization
-    'plotFreqX',[1 100],...            % Frequency range for analysis
-    'tmsMuscle','on',...               % Continue TMS-muscle detection
-    'tmsMuscleThresh',8,...            % Same threshold as before
-    'tmsMuscleWin',[11 30],...         % TMS-muscle time window
-    'tmsMuscleFeedback','off',...      % Disable feedback
-    'blink','off',...                   % Enable blink artifact detection
-    'blinkThresh',2.5,...              % Blink detection sensitivity
-    'blinkElecs',{'Fp1','Fp2'},...     % Frontal electrodes for blinks
-    'blinkFeedback','off',...          % Disable blink feedback
-    'move','on',...                    % Enable movement artifact detection
-    'moveThresh',2,...                 % Movement detection sensitivity
-    'moveElecs',{'F7','F8'},...        % Temporal electrodes for movements
-    'moveFeedback','off',...           % Disable movement feedback
-    'muscle','on',...                  % Enable general muscle detection
-    'muscleThresh',0.6,...             % Muscle detection threshold
-    'muscleFreqWin',[30 100],...       % High-frequency muscle activity
-    'muscleFeedback','off',...         % Disable muscle feedback
-    'elecNoise','on',...               % Enable electrode noise detection
+EEG = pop_tesa_compselect( EEG, ...
+    'compCheck','off',...              % Disable manual component checking
+    'comps', 15, ...                   % Number of components to evaluate
+    'figSize','small',...              % Component plot size
+    'plotTimeX',[-100 399],...         % Time window for component visualization
+    'plotFreqX',[1 100],...            % Frequency range for spectral analysis
+    'tmsMuscle','on',...               % Enable TMS-muscle artifact detection
+    'tmsMuscleThresh',8,...            % Threshold for muscle artifact identification
+    'tmsMuscleWin',[11 30],...         % Time window where muscle artifacts occur
+    'tmsMuscleFeedback','on',...       % Enable feedback plot
+    'blink','on',...                  % Disable blink detection (first pass)
+    'blinkThresh',2.5,...              % Blink detection threshold
+    'blinkElecs',{'Fp1','Fp2'},...     % Electrodes for blink detection
+    'blinkFeedback','on',...           % Enable blink feedback plots
+    'move','on',...                   % Disable movement detection (first pass)
+    'moveThresh',2,...                 % Movement detection threshold
+    'moveElecs',{'F7','F8'},...        % Electrodes for movement detection
+    'moveFeedback','on',...            % Enable movement feedback plots
+    'muscle','on',...                 % Disable general muscle detection (first pass)
+    'muscleThresh',0.6,...             % General muscle detection threshold
+    'muscleFreqWin',[30 100],...       % Frequency window for muscle activity
+    'muscleFeedback','on',...          % Enable muscle feedback plots
+    'elecNoise','on',...              % Disable electrode noise detection (first pass)
     'elecNoiseThresh',4,...            % Electrode noise threshold
-    'elecNoiseFeedback','off' );       % Disable noise feedback
+    'elecNoiseFeedback','on' );        % Enable electrode noise feedback
 
 EEG.setname = [current_datasets_savename '_CompSel2'];
 
