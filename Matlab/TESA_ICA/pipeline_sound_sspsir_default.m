@@ -371,22 +371,22 @@ EEG = pop_tesa_compselect( EEG, ...
     'tmsMuscle','off',...              % Disable TMS-muscle artifact detection (not focus here)
     'tmsMuscleThresh',8,...            % TMS-muscle threshold (not used)
     'tmsMuscleWin',[11 30],...         % TMS-muscle window (not used)
-    'tmsMuscleFeedback','on',...      % Disable TMS-muscle feedback
+    'tmsMuscleFeedback','on',...       % Enable TMS-muscle feedback
     'blink','on',...                   % Enable blink artifact detection
-    'blinkThresh', 2,...              % Blink detection threshold
+    'blinkThresh', 2,...               % Blink detection threshold
     'blinkElecs',{'Fp1','Fp2'},...     % Frontal electrodes for blink detection
-    'blinkFeedback','on',...          % Disable blink feedback plots
+    'blinkFeedback','on',...           % Enable blink feedback feedback
     'move','on',...                    % Enable eye movement detection
     'moveThresh',2,...                 % Movement detection threshold
     'moveElecs',{'F7','F8'},...        % Temporal electrodes for eye movements
-    'moveFeedback','on',...           % Disable movement feedback plots
+    'moveFeedback','on',...            % Enable movement feedback feedback
     'muscle','off',...                 % Disable general muscle detection
     'muscleThresh',0.6,...             % Muscle threshold (not used)
     'muscleFreqWin',[30 100],...       % Muscle frequency window (not used)
-    'muscleFeedback','on',...         % Disable muscle feedback
+    'muscleFeedback','on',...          % Enable muscle feedback
     'elecNoise','off',...              % Disable electrode noise detection
     'elecNoiseThresh',4,...            % Electrode noise threshold (not used)
-    'elecNoiseFeedback','on' );       % Disable electrode noise feedback
+    'elecNoiseFeedback','on' );        % Enable electrode noise feedback
 
 % Save information about removed components
 if isfield(EEG, 'reject') && isfield(EEG.reject, 'gcompreject')
