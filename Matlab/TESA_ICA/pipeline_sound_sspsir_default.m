@@ -366,26 +366,26 @@ EEG = pop_tesa_compselect( EEG, ...
     'compCheck','off',...              % Disable manual component checking
     'comps', 15, ...                   % Number of components to evaluate
     'figSize','small',...              % Component plot size
-    'plotTimeX',[-200 500],...         % Time window for component visualization
+    'plotTimeX',[-100 399],...         % Time window for component visualization
     'plotFreqX',[1 100],...            % Frequency range for spectral analysis
-    'tmsMuscle','off',...              % Disable TMS-muscle artifact detection (not focus here)
-    'tmsMuscleThresh',8,...            % TMS-muscle threshold (not used)
-    'tmsMuscleWin',[11 30],...         % TMS-muscle window (not used)
-    'tmsMuscleFeedback','on',...       % Enable TMS-muscle feedback
-    'blink','on',...                   % Enable blink artifact detection
-    'blinkThresh', 2,...               % Blink detection threshold
-    'blinkElecs',{'Fp1','Fp2'},...     % Frontal electrodes for blink detection
-    'blinkFeedback','on',...           % Enable blink feedback feedback
-    'move','on',...                    % Enable eye movement detection
+    'tmsMuscle','off',...               % Enable TMS-muscle artifact detection
+    'tmsMuscleThresh',8,...            % Threshold for muscle artifact identification
+    'tmsMuscleWin',[11 30],...         % Time window where muscle artifacts occur
+    'tmsMuscleFeedback','on',...       % Enable feedback plot
+    'blink','on',...                  % Disable blink detection (first pass)
+    'blinkThresh',2.5,...              % Blink detection threshold
+    'blinkElecs',{'Fp1','Fp2'},...     % Electrodes for blink detection
+    'blinkFeedback','on',...           % Enable blink feedback plots
+    'move','on',...                   % Disable movement detection (first pass)
     'moveThresh',2,...                 % Movement detection threshold
-    'moveElecs',{'F7','F8'},...        % Temporal electrodes for eye movements
-    'moveFeedback','on',...            % Enable movement feedback feedback
-    'muscle','off',...                 % Disable general muscle detection
-    'muscleThresh',0.6,...             % Muscle threshold (not used)
-    'muscleFreqWin',[30 100],...       % Muscle frequency window (not used)
-    'muscleFeedback','on',...          % Enable muscle feedback
-    'elecNoise','off',...              % Disable electrode noise detection
-    'elecNoiseThresh',4,...            % Electrode noise threshold (not used)
+    'moveElecs',{'F7','F8'},...        % Electrodes for movement detection
+    'moveFeedback','off',...            % Enable movement feedback plots
+    'muscle','off',...                 % Disable general muscle detection (first pass)
+    'muscleThresh',0.6,...             % General muscle detection threshold
+    'muscleFreqWin',[30 100],...       % Frequency window for muscle activity
+    'muscleFeedback','on',...          % Enable muscle feedback plots
+    'elecNoise','off',...              % Disable electrode noise detection (first pass)
+    'elecNoiseThresh',4,...            % Electrode noise threshold
     'elecNoiseFeedback','on' );        % Enable electrode noise feedback
 
 % Save information about removed components

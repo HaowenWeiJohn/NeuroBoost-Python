@@ -358,22 +358,22 @@ EEG = pop_tesa_compselect( EEG, ...
     'tmsMuscle','on',...               % Enable TMS-muscle artifact detection
     'tmsMuscleThresh',8,...            % Threshold for muscle artifact identification
     'tmsMuscleWin',[11 30],...         % Time window where muscle artifacts occur
-    'tmsMuscleFeedback','on',...       % Enable feedback plots
+    'tmsMuscleFeedback','off',...      % Disable feedback plots
     'blink','off',...                  % Disable blink detection (first pass)
     'blinkThresh',2.5,...              % Blink detection threshold
     'blinkElecs',{'Fp1','Fp2'},...     % Electrodes for blink detection
-    'blinkFeedback','on',...           % Enable blink feedback plots
+    'blinkFeedback','off',...          % Disable blink feedback plots
     'move','off',...                   % Disable movement detection (first pass)
     'moveThresh',2,...                 % Movement detection threshold
     'moveElecs',{'F7','F8'},...        % Electrodes for movement detection
-    'moveFeedback','on',...            % Enable movement feedback plots
+    'moveFeedback','off',...           % Disable movement feedback plots
     'muscle','off',...                 % Disable general muscle detection (first pass)
     'muscleThresh',0.6,...             % General muscle detection threshold
     'muscleFreqWin',[30 100],...       % Frequency window for muscle activity
-    'muscleFeedback','on',...          % Enable muscle feedback plots
+    'muscleFeedback','off',...         % Disable muscle feedback plots
     'elecNoise','off',...              % Disable electrode noise detection (first pass)
     'elecNoiseThresh',4,...            % Electrode noise threshold
-    'elecNoiseFeedback','on' );        % Enable electrode noise feedback
+    'elecNoiseFeedback','off' );       % Disable electrode noise feedback
 
 EEG.setname = [current_datasets_savename '_CompSel1'];
 EEG = pop_saveset(EEG, 'filename', [EEG.setname '.set'], 'filepath', current_output_folder);
@@ -461,22 +461,22 @@ EEG = pop_tesa_compselect( EEG,...
     'tmsMuscle','on',...               % Continue TMS-muscle detection
     'tmsMuscleThresh',8,...            % Same threshold as before
     'tmsMuscleWin',[11 30],...         % TMS-muscle time window
-    'tmsMuscleFeedback','on',...       % Enable feedback
+    'tmsMuscleFeedback','off',...      % Disable feedback
     'blink','off',...                   % Enable blink artifact detection
     'blinkThresh',2.5,...              % Blink detection sensitivity
     'blinkElecs',{'Fp1','Fp2'},...     % Frontal electrodes for blinks
-    'blinkFeedback','on',...           % Enable blink feedback
+    'blinkFeedback','off',...          % Disable blink feedback
     'move','on',...                    % Enable movement artifact detection
     'moveThresh',2,...                 % Movement detection sensitivity
     'moveElecs',{'F7','F8'},...        % Temporal electrodes for movements
-    'moveFeedback','on',...            % Enable movement feedback
+    'moveFeedback','off',...           % Disable movement feedback
     'muscle','on',...                  % Enable general muscle detection
     'muscleThresh',0.6,...             % Muscle detection threshold
     'muscleFreqWin',[30 100],...       % High-frequency muscle activity
-    'muscleFeedback','on',...          % Enable muscle feedback
+    'muscleFeedback','off',...         % Disable muscle feedback
     'elecNoise','on',...               % Enable electrode noise detection
     'elecNoiseThresh',4,...            % Electrode noise threshold
-    'elecNoiseFeedback','on' );        % Enable noise feedback
+    'elecNoiseFeedback','off' );       % Disable noise feedback
 
 EEG.setname = [current_datasets_savename '_CompSel2'];
 
@@ -580,6 +580,5 @@ fprintf('Final data shape : [%d channels × %d timepoints × %d epochs]\n', ...
         size(EEG.data,1), size(EEG.data,2), size(EEG.data,3));
 fprintf('Sampling rate    : %.1f Hz\n', EEG.srate);
 fprintf('====================================\n');
-
 
 
