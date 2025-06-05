@@ -101,7 +101,7 @@ events, event_id = mne.events_from_annotations(raw)
 
 # create epochs
 epochs = mne.Epochs(raw, events, event_id=stimulus_event_id,
-                    tmin=-1, tmax=1,  # 1 second before and after the event
+                    tmin=-0.02, tmax=0.02,  # 1 second before and after the event
                     baseline=None,
                     preload=True
                     )
@@ -127,15 +127,6 @@ browser = epochs.plot(
     scalings   = 'auto',
     block      = True     # blocks script until you close the window
 )
-
-
-
-
-
-
-
-
-
 
 
 
