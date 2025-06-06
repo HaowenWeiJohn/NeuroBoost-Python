@@ -1,4 +1,4 @@
-function visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, plotTitle, save_fig, output_path, filename)
+function visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, plotTitle, save_fig, output_path, filename, titleInterpreter)
     % VISUALIZE_EEG_EVOKED - Create publication-quality visualization of TMS-evoked potentials
     %
     % This function generates a comprehensive plot of EEG evoked responses following
@@ -8,6 +8,7 @@ function visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, 
     % SYNTAX:
     %   visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, plotTitle)
     %   visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, plotTitle, save_fig, output_path, filename)
+    %   visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, plotTitle, save_fig, output_path, filename, titleInterpreter)
     %
     % INPUTS:
     %   EEG              - EEGLAB EEG structure containing epoched data
@@ -27,6 +28,10 @@ function visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, 
     %   save_fig         - Boolean indicating whether to save the figure (default: false)
     %   output_path      - Path to save the figure (required if save_fig is true)
     %   filename         - Base name for saved figure files (required if save_fig is true)
+    %   titleInterpreter - String specifying title interpreter behavior (default: not specified)
+    %                      Options: 'none' (literal text, no interpretation), 
+    %                               'tex' (TeX markup), 'latex' (LaTeX markup)
+    %                      If not specified, uses MATLAB's default behavior
     %
     % OUTPUTS:
     %   Creates a figure window with the evoked potential visualization
@@ -37,16 +42,17 @@ function visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, 
     %   visualize_eeg_evoked(EEG, [-1000 -2], [-100 400], [-20 30], ...
     %                       'Final TESA-processed TMS-evoked potentials');
     %
-    %   % With figure saving
+    %   % With figure saving and title containing underscores
     %   visualize_eeg_evoked(EEG, [-1000 -2], [-100 400], [-20 30], ...
-    %                       'Final TESA-processed TMS-evoked potentials', ...
-    %                       true, '/path/to/output', 'tep_figure');
+    %                       'TMS-evoked potentials - Center_110_part1', ...
+    %                       true, '/path/to/output', 'tep_figure', 'none');
     %
     % NOTES:
     %   - Function assumes data is already epoched around stimulus events
     %   - Baseline correction is applied to a copy, original data unchanged
     %   - All channels are plotted; consider channel selection for cleaner visualization
     %   - Time zero should correspond to TMS pulse onset in the epoch structure
+    %   - Use titleInterpreter 'none' for titles with underscores to prevent subscript formatting
     %
     % See also: POP_RMBASE, MEAN, PLOT
 
@@ -60,6 +66,9 @@ function visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, 
     end
 
     % Input validation and default parameter handling
+    if nargin < 9 || isempty(titleInterpreter)
+        titleInterpreter = '';  % Empty means don't specify interpreter (use MATLAB default)
+    end
     if nargin < 8 || isempty(filename)
         filename = 'eeg_evoked_plot';
     end
@@ -114,7 +123,16 @@ function visualize_eeg_evoked(EEG, baselineWindow, timeLimits, amplitudeLimits, 
     % Set axis limits and labels
     xlim(timeLimits);
     ylim(amplitudeLimits);
-    title(plotTitle, 'FontSize', 14, 'FontWeight', 'bold');
+    
+    % Set title with optional interpreter specification
+    if isempty(titleInterpreter)
+        % Use MATLAB default behavior (don't specify interpreter)
+        title(plotTitle, 'FontSize', 14, 'FontWeight', 'bold');
+    else
+        % Use specified interpreter
+        title(plotTitle, 'FontSize', 14, 'FontWeight', 'bold', 'Interpreter', titleInterpreter);
+    end
+    
     xlabel('Time (ms)', 'FontSize', 12);
     ylabel('Amplitude (µV)', 'FontSize', 12);
     

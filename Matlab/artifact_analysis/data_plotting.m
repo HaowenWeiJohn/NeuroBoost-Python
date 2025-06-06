@@ -258,7 +258,8 @@ for file_idx = 1:num_files
             sprintf('TMS-evoked potentials - %s', current_datasets_savename), ...
             true, ...                          % Enable automatic figure saving
             current_output_folder, ...         % Output directory
-            [current_datasets_savename '_evoked_potentials']); % Filename base
+            [current_datasets_savename '_evoked_potentials'], ... % Filename base
+            'none'); % titleInterpreter: prevent underscore interpretation
         
         fprintf('  ✓ Successfully processed %s\n\n', current_datasets_savename);
         
@@ -277,28 +278,6 @@ fprintf('\n=== PROCESSING COMPLETE ===\n');
 fprintf('Processed %d files\n', num_files);
 fprintf('Results saved in: %s\n', output_root);
 fprintf('============================\n');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
