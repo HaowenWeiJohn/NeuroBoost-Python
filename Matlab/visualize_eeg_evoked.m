@@ -302,10 +302,10 @@ function visualize_eeg_evoked(EEG, varargin)
     % Set title with optional interpreter specification
     if isempty(titleInterpreter)
         % Use MATLAB default behavior (don't specify interpreter)
-        title(plotTitle, 'FontSize', 14, 'FontWeight', 'bold');
+        title(plotTitle, 'FontSize', 10, 'FontWeight', 'bold');
     else
         % Use specified interpreter
-        title(plotTitle, 'FontSize', 14, 'FontWeight', 'bold', 'Interpreter', titleInterpreter);
+        title(plotTitle, 'FontSize', 10, 'FontWeight', 'bold', 'Interpreter', titleInterpreter);
     end
     
     xlabel('Time (ms)', 'FontSize', 12);
