@@ -21,6 +21,7 @@ import torch
 
 def visualize_digitalization_file_3d(
     filepath,
+    channel_names=None,
     always_visible=True,
     point_size=10,
     font_size=20,
@@ -33,6 +34,8 @@ def visualize_digitalization_file_3d(
 
     Parameters:
     - filepath (str or Path): Path to the digitization CSV file.
+    - channel_names (list of str or None): Optional list of channel names to use as labels.
+                                           If None, uses the '#' column in the file.
     - always_visible (bool): Whether to always show labels.
     - point_size (int): Point size for labels.
     - font_size (int): Font size for labels.
@@ -42,8 +45,12 @@ def visualize_digitalization_file_3d(
     df = pd.read_csv(filepath)
 
     # Extract channel names, replacing 33–64 with offset +8
-    ch_names = df['#'].astype(str).tolist()
-
+    if channel_names is None:
+        ch_names = df['#'].astype(str).tolist()
+    else:
+        if len(channel_names) != len(df):
+            raise ValueError("Provided channel_names list must match the number of coordinate rows.")
+        ch_names = channel_names
 
     # for i in range(33, 65):
     #     ch_names[i - 1] = str(i + 8)
@@ -75,21 +82,25 @@ def visualize_digitalization_file_3d(
 
 
 
-def visualize_digitalization_file_2d(filepath, distance_scaler = 0.001, show_names=True):
+def visualize_digitalization_file_2d(filepath, channel_names=None, distance_scaler = 0.001, show_names=True):
     """
     Plot 2D EEG topomap from digitization file using MNE.
 
     Parameters:
     - filepath (str or Path): Path to the digitization CSV file.
+    - channel_names (list of str or None): Optional list of channel names to use as labels.
+                                           If None, uses the '#' column in the file.
     - show_names (bool): Whether to show channel names on the plot.
     """
     df = pd.read_csv(filepath)
 
     # Extract and correct channel names (add 8 for index 33–64)
-    ch_names = df['#'].astype(str).tolist()
-
-    # for i in range(33, 65):
-    #     ch_names[i - 1] = str(i + 8)
+    if channel_names is None:
+        ch_names = df['#'].astype(str).tolist()
+    else:
+        if len(channel_names) != len(df):
+            raise ValueError("Provided channel_names list must match the number of coordinate rows.")
+        ch_names = channel_names
 
     coords_m = (df[['x', 'y', 'z']] * distance_scaler).values  # mm → m
     ch_pos = {name: coord for name, coord in zip(ch_names, coords_m)}
