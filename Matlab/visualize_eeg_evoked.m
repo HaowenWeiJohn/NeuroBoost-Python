@@ -302,10 +302,10 @@ function visualize_eeg_evoked(EEG, varargin)
     % Set title with optional interpreter specification
     if isempty(titleInterpreter)
         % Use MATLAB default behavior (don't specify interpreter)
-        title(plotTitle, 'FontSize', 10, 'FontWeight', 'bold');
+        title(plotTitle, 'FontSize', 11, 'FontWeight', 'bold');
     else
         % Use specified interpreter
-        title(plotTitle, 'FontSize', 10, 'FontWeight', 'bold', 'Interpreter', titleInterpreter);
+        title(plotTitle, 'FontSize', 11, 'FontWeight', 'bold', 'Interpreter', titleInterpreter);
     end
     
     xlabel('Time (ms)', 'FontSize', 12);
@@ -324,7 +324,8 @@ function visualize_eeg_evoked(EEG, varargin)
     % Enhance plot appearance
     grid on;
     grid minor;
-    set(gca, 'FontSize', 10);
+    % Set tick label font size only (not affecting title, xlabel, ylabel)
+    set(gca, 'FontSize', 10, 'TitleFontSizeMultiplier', 0.8);  % Preserve smaller title size
     
     hold off;
 
